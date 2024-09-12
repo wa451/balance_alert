@@ -151,145 +151,148 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Color(0xffC6D8F7),
         title: Text(widget.title),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Color(0xffFAE6E1),
-                borderRadius: BorderRadius.circular(30.0),
-              ),
-              child: Center(
-                child: Text(
-                  '期間 ${getPeriodText()}',
-                  style: TextStyle(fontSize: 18.0),
-                ),
-              ),
-            ),
-
-            SizedBox(height: 20),
-            
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.pink[50],
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40.0, vertical: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
                 padding: EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      '残高',
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                    Text(
-                      '$balance円',
-                      style: TextStyle(
-                        fontSize: 36.0,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    const Text(
-                      '予算',
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                    Text(
-                      '$_budget円',
-                      style: TextStyle(
-                        fontSize: 36.0,
-                        color: Color(0xffA5D9BC),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    const Text(
-                      '使った額',
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                    Text(
-                      '$spent円',
-                      style: TextStyle(
-                        fontSize: 36.0,
-                        color: Color(0xffF29083),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      '予算との差額',
-                      style: TextStyle(fontSize: 18.0),
-                    ),
-                    SizedBox(height: 20),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 150.0,
-                          height: 150.0,
-                          child: CircularProgressIndicator(
-                            value: getProgress(),
-                            backgroundColor: Colors.grey[300],
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xffF29083)),
-                            strokeWidth: 30,
-                          ),
-                        ),
-                        Text(
-                          getSub(),
-                          style: TextStyle(fontSize: 17.0),
-                        ),
-                      ],
-                    ),
-                  ],
+                decoration: BoxDecoration(
+                  color: Color(0xffFAE6E1),
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                child: Center(
+                  child: Text(
+                    '期間 ${getPeriodText()}',
+                    style: TextStyle(fontSize: 18.0),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: () async {
-                final result = await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => SettingsScreen(
-                      selectedPeriod: _selectedPeriod,
-                      startDay: _startDay,
-                      startDate: _startDate,
-                      budget: _budget,
-                    ),
+        
+              SizedBox(height: 20),
+              
+              Container(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.pink[50],
+                    borderRadius: BorderRadius.circular(20.0),
                   ),
-                );
-                if (result != null) {
-                  setState(() {
-                    _selectedPeriod = result['period'];
-                    _startDay = result['startDay'];
-                    _startDate = result['startDate'];
-                    _budget = result['budget'];
-                  });
-                  await _saveSettings();
-                }
-              },
-              child: Text(
-                '設定',
-                style: TextStyle(color: Colors.black),
+                  padding: EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        '残高',
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                      Text(
+                        '$balance円',
+                        style: TextStyle(
+                          fontSize: 36.0,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      const Text(
+                        '予算',
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                      Text(
+                        '$_budget円',
+                        style: TextStyle(
+                          fontSize: 36.0,
+                          color: Color(0xffA5D9BC),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      const Text(
+                        '使った額',
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                      Text(
+                        '$spent円',
+                        style: TextStyle(
+                          fontSize: 36.0,
+                          color: Color(0xffF29083),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Text(
+                        '予算との差額',
+                        style: TextStyle(fontSize: 18.0),
+                      ),
+                      SizedBox(height: 20),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 150.0,
+                            height: 150.0,
+                            child: CircularProgressIndicator(
+                              value: getProgress(),
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xffF29083)),
+                              strokeWidth: 30,
+                            ),
+                          ),
+                          Text(
+                            getSub(),
+                            style: TextStyle(fontSize: 17.0),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 20),
+                    ],
+                  ),
+                ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xffC6D8F7),
+              SizedBox(height: 20),
+        
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SettingsScreen(
+                        selectedPeriod: _selectedPeriod,
+                        startDay: _startDay,
+                        startDate: _startDate,
+                        budget: _budget,
+                      ),
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _selectedPeriod = result['period'];
+                      _startDay = result['startDay'];
+                      _startDate = result['startDate'];
+                      _budget = result['budget'];
+                    });
+                    await _saveSettings();
+                  }
+                },
+                child: Text(
+                  '設定',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xffC6D8F7),
+                ),
               ),
-            ),
-
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     await _clearAllValues();
-            //     // Optionally, you can navigate back or show a confirmation message
-            //   },
-            //   child: Text('すべての設定を削除'),
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: Color(0xffF29083),
-            //   ),
-            // ),
-          ],
+        
+              // ElevatedButton(
+              //   onPressed: () async {
+              //     await _clearAllValues();
+              //     // Optionally, you can navigate back or show a confirmation message
+              //   },
+              //   child: Text('すべての設定を削除'),
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: Color(0xffF29083),
+              //   ),
+              // ),
+            ],
+          ),
         ),
       ),
     );
