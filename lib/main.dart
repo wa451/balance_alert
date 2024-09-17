@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'setting.dart';
+import 'Image_Display_Page.dart';
+import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
+import 'package:flutter_sharing_intent/model/sharing_file.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,6 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
   DateFormat dateFormat = DateFormat('M月d日');
   DateTime start = DateTime.now(); //期間開始日時
   DateTime end = DateTime.now().add(Duration(days: 7));//期間終了日時
+  late StreamSubscription _intentDataStreamSubscription;
+  List<SharedFile>? list;
 
   @override
   void initState() {
@@ -47,6 +53,31 @@ class _MyHomePageState extends State<MyHomePage> {
     _loadSettings();
     _checkAndResetSpent();
     getPeriodText();
+    // アプリがメモリ内にあるときにアプリ外から来た画像を共有する場合
+    _intentDataStreamSubscription = FlutterSharingIntent.instance
+        .getMediaStream()
+        .listen((List<SharedFile> value) {
+      setState(() {
+        list = value;
+      });
+    }, onError: (err) {
+      print('getIntentDataStream error: $err');
+    });
+
+    // アプリ終了中にアプリの外から来た画像を共有する場合
+    FlutterSharingIntent.instance
+        .getInitialSharing()
+        .then((List<SharedFile> value) {
+      setState(() {
+        list = value;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _intentDataStreamSubscription.cancel();
+    super.dispose();
   }
 
   void _checkAndResetSpent() { //期間が過ぎたか判定
@@ -280,6 +311,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   backgroundColor: Color(0xffC6D8F7),
                 ),
               ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ImageDisplayPage(list: list)),
+                    );
+                    },
+                    child: Text('画像表示ページへ'),
+                    ),
         
               // ElevatedButton(
               //   onPressed: () async {
