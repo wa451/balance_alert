@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'setting.dart';
-import 'Image_Display_Page.dart';
+import 'Payment_history_Page.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -46,11 +48,15 @@ class _MyHomePageState extends State<MyHomePage> {
   DateTime end = DateTime.now().add(Duration(days: 7));//期間終了日時
   late StreamSubscription _intentDataStreamSubscription;
   List<SharedFile>? list;
+  List<Map<String, dynamic>> amountsWithDates = []; // 金額と日付のペアを保存するリスト
+  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.japanese);
+  
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadAmountsWithDates(); // アプリ起動時に保存された金額と日付のリストを読み込む
     _checkAndResetSpent();
     getPeriodText();
     // アプリがメモリ内にあるときにアプリ外から来た画像を共有する場合
@@ -60,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         list = value;
       });
+      _recognizeTextFromImage(); // テキスト認識を呼び出す
     }, onError: (err) {
       print('getIntentDataStream error: $err');
     });
@@ -71,13 +78,71 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         list = value;
       });
+      _recognizeTextFromImage(); // テキスト認識を呼び出す
     });
   }
 
   @override
   void dispose() {
     _intentDataStreamSubscription.cancel();
+     _textRecognizer.close();
     super.dispose();
+  }
+
+  Future<void> _recognizeTextFromImage() async {
+    if (list == null || list!.isEmpty) return;
+
+    final filePath = list!.first.value; // 画像ファイルのパスを取得
+
+    if (filePath != null) {
+      final inputImage = InputImage.fromFilePath(filePath); // 画像をInputImage形式に変換
+
+      try {
+        final recognizedText = await _textRecognizer.processImage(inputImage); // テキスト認識を実行
+        final fullText = recognizedText.text; // 認識された全テキスト
+        
+        print('認識されたテキスト: $fullText'); // デバッグ用に全テキストを出力
+
+        // 正規表現で日付部分を抽出
+        final RegExp dateRegExp = RegExp(r'(\d{4}年\d{1,2}月\d{1,2}日)');
+        final matchDate = dateRegExp.firstMatch(fullText);
+        String recognizedDate = matchDate != null ? matchDate.group(0)! : "日付不明"; // 日付が見つからない場合、デフォルト値を使用
+        if (matchDate != null) {
+          print('抽出された日付: $recognizedDate');
+        }else{
+          print('日付が見つかりませんでした。');
+        }
+
+        // 正規表現で金額部分を抽出
+        final RegExp amountRegExp = RegExp(r'(\d{1,3}(,\d{3})*)円');
+        final matchAmount = amountRegExp.firstMatch(fullText);
+        if (matchAmount != null) {
+          // 金額をString型からint型に変換
+          final amountStr = matchAmount.group(1)?.replaceAll(',', ''); // カンマを除去して数値部分を取得
+          final parsedAmount = int.tryParse(amountStr ?? '');
+          if (parsedAmount != null) {
+            setState(() {
+              // 新しい金額と日付のペアをリストの先頭に追加
+              if (amountsWithDates.length >= 20) {
+                amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
+              }
+              amountsWithDates.insert(0, {'amount': parsedAmount, 'date': recognizedDate});
+            });
+            await _saveAmountsWithDates(); // 認識した金額と日付のリストを保存
+            print('抽出された金額: $parsedAmount');
+          } else {
+            print('金額の変換に失敗しました。');
+          }
+        } else {
+          print('金額が見つかりませんでした。');
+        }
+
+      } catch (e) {
+        print('テキスト認識エラー: $e');
+      }
+    } else {
+      print('画像ファイルのパスが無効です。');
+    }
   }
 
   void _checkAndResetSpent() { //期間が過ぎたか判定
@@ -115,6 +180,25 @@ class _MyHomePageState extends State<MyHomePage> {
     await prefs.setString('spent', spent);
     await prefs.setString('balance', balance);
     await prefs.setString('end', end.toIso8601String());
+  }
+
+  // 金額と日付のリストを保存するメソッド
+  Future<void> _saveAmountsWithDates() async {
+    final prefs = await SharedPreferences.getInstance();
+    String jsonString = jsonEncode(amountsWithDates);
+    await prefs.setString('saved_amounts_with_dates', jsonString);
+  }
+
+  // 保存された金額と日付のリストを読み込むメソッド
+  Future<void> _loadAmountsWithDates() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? jsonString = prefs.getString('saved_amounts_with_dates');
+    if (jsonString != null) {
+      List<dynamic> jsonList = jsonDecode(jsonString);
+      setState(() {
+        amountsWithDates = jsonList.map((e) => e as Map<String, dynamic>).toList();
+      });
+    }
   }
 
   Future<void> _clearAllValues() async { //データベース初期化
@@ -315,10 +399,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ImageDisplayPage(list: list)),
+                    MaterialPageRoute(
+                      builder: (context) => ImageDisplayPage(
+                        list: list,
+                        money_day_list: amountsWithDates)),
                     );
                     },
-                    child: Text('画像表示ページへ'),
+                    child: Text('決済履歴確認'),
                     ),
         
               // ElevatedButton(
