@@ -12,7 +12,7 @@ android {
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8  
     }
 
     kotlinOptions {
@@ -37,6 +37,12 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+}
+
+dependencies {
+    // 言語パッケージの依存関係の追加
+    implementation 'com.google.mlkit:text-recognition-japanese:16.0.0'
+
 }
 
 flutter {
