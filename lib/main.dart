@@ -146,7 +146,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
               }
               amountsWithDates
-                  .insert(0, {'amount': amountStr, 'date': recognizedDate});
+                  .insert(0, {'amount': amountStr, 'date': recognizedDate,'imagePath': filePath});
               if (plus){
                 spent = parsedSpent_minus.toString();
               }
