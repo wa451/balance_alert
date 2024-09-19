@@ -19,6 +19,48 @@ class ImageDisplayPage extends StatelessWidget {
       return '決済金額: ¥$amount';
     }
   }
+
+// 画像プレビューのためのモーダルダイアログ表示
+  void _showImagePreview(BuildContext context, String imagePath) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.file(
+                      File(imagePath), // 画像を表示
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+              // 左上に「×」ボタンを配置
+              Positioned(
+                top: 10,
+                left: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.black),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // モーダルを閉じる
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,6 +81,7 @@ class ImageDisplayPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final amount = money_day_list[index]['amount'].toString();
                         final date = money_day_list[index]['date'];
+                        final imagePath = money_day_list[index]['imagePath']; // 画像のパスを取得
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           elevation: 3,// カードの影の強さ（立体感）を設定
@@ -53,7 +96,13 @@ class ImageDisplayPage extends StatelessWidget {
                               '日付: $date',
                               style: TextStyle(fontSize: 16),
                             ),
-                            trailing: Icon(Icons.calendar_today, color: Colors.blue),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.photo, color: Colors.blue), // 写真アイコン
+                              onPressed: () {
+                                // アイコンを押したときに画像プレビューを表示
+                                _showImagePreview(context, imagePath);
+                                },
+                          ),
                           ),
                         );
                       },
