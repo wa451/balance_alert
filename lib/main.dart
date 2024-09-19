@@ -124,14 +124,20 @@ class _MyHomePageState extends State<MyHomePage> {
         }
 
         // 正規表現で金額部分を抽出
-        final RegExp amountRegExp = RegExp(r'(\d{1,3}(,\d{3})*)円');
+        final RegExp amountRegExp = RegExp(r'(\+?\d{1,3}(,\d{3})*)円');
         final matchAmount = amountRegExp.firstMatch(fullText);
         if (matchAmount != null) {
           // 金額をString型からint型に変換
           final amountStr =
               matchAmount.group(1)?.replaceAll(',', ''); // カンマを除去して数値部分を取得
-          final parsedAmount = int.tryParse(amountStr ?? '');
-          final parsedSpent = int.parse(spent) + (parsedAmount as int);
+          bool plus=true; //+が含まれているか
+          if (amountStr != null && amountStr.startsWith('+')){
+            print('文字列の先頭に+があります: $amountStr');
+            plus=false;//+が含まれていたらfalse
+          }
+          final parsedAmount = int.tryParse(amountStr?.replaceFirst('+', '') ?? ''); 
+          final parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
+          final parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
           if (parsedAmount != null) {
             setState(() {
               // 新しい金額と日付のペアをリストの先頭に追加
@@ -139,8 +145,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
               }
               amountsWithDates
-                  .insert(0, {'amount': parsedAmount, 'date': recognizedDate});
-              spent = parsedSpent.toString();
+                  .insert(0, {'amount': amountStr, 'date': recognizedDate});
+              if (plus){
+                spent = parsedSpent_minus.toString();
+              }
+              else{
+                spent = parsedSpent_plus.toString();
+              }
             });
             await _saveSettings(); // 認識した金額と日付のリストを保存
             print('抽出された金額: $parsedAmount');
