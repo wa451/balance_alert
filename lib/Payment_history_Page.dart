@@ -96,11 +96,13 @@ class ImageDisplayPage extends StatelessWidget {
                               '日付: $date',
                               style: TextStyle(fontSize: 16),
                             ),
-                            trailing: Icon(Icons.calendar_today, color: Colors.blue),
-                            onTap: () {
-                                // カードを押したときに画像を表示する
+                            trailing: IconButton(
+                              icon: const Icon(Icons.photo, color: Colors.blue), // 写真アイコン
+                              onPressed: () {
+                                // アイコンを押したときに画像プレビューを表示
                                 _showImagePreview(context, imagePath);
-                              },
+                                },
+                          ),
                           ),
                         );
                       },
