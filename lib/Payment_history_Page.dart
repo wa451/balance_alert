@@ -9,11 +9,18 @@ class ImageDisplayPage extends StatelessWidget {
     super.key, 
     this.list,
     this.money_day_list});
-  
+    
+  String money_print(amount){
+    if (amount.contains('+')){
+      amount = amount.substring(1);
+      return '受け取り金額: +¥$amount';
+    }
+    else{
+      return '決済金額: ¥$amount';
+    }
+  }
   @override
   Widget build(BuildContext context) {
-    final sharingData = list?.firstOrNull?.value;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('決済履歴'),
@@ -30,15 +37,16 @@ class ImageDisplayPage extends StatelessWidget {
                       physics: NeverScrollableScrollPhysics(), // 親のスクロールに従う
                       itemCount: money_day_list.length,
                       itemBuilder: (context, index) {
-                        final amount = money_day_list[index]['amount'];
+                        final amount = money_day_list[index]['amount'].toString();
                         final date = money_day_list[index]['date'];
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           elevation: 3,// カードの影の強さ（立体感）を設定
                           child: ListTile(
                             leading: Icon(Icons.attach_money, color: Colors.green),
-                            title: Text(
-                              '決済金額: ¥$amount',
+                            title: 
+                            Text(
+                              money_print(amount),
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
