@@ -42,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String _startDate = '1'; //何日始まり
   String _budget = "0"; //予算
   String spent = '5000'; //使った額
-  String balance = '10000'; //残高
+  // String balance = '10000'; //残高
   DateFormat dateFormat = DateFormat('M月d日');
   DateTime start = DateTime.now(); //期間開始日時
   DateTime end = DateTime.now().add(Duration(days: 7)); //期間終了日時
@@ -51,6 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> amountsWithDates = []; // 金額と日付のペアを保存するリスト
   final TextRecognizer _textRecognizer =
       TextRecognizer(script: TextRecognitionScript.japanese);
+  bool flag = false; //now.isAfter(endDateOnly)用
 
   @override
   void initState() {
@@ -124,20 +125,14 @@ class _MyHomePageState extends State<MyHomePage> {
         }
 
         // 正規表現で金額部分を抽出
-        final RegExp amountRegExp = RegExp(r'(\+?\d{1,3}(,\d{3})*)円');
+        final RegExp amountRegExp = RegExp(r'(\d{1,3}(,\d{3})*)円');
         final matchAmount = amountRegExp.firstMatch(fullText);
         if (matchAmount != null) {
           // 金額をString型からint型に変換
           final amountStr =
               matchAmount.group(1)?.replaceAll(',', ''); // カンマを除去して数値部分を取得
-          bool plus=true; //+が含まれているか
-          if (amountStr != null && amountStr.startsWith('+')){
-            print('文字列の先頭に+があります: $amountStr');
-            plus=false;//+が含まれていたらfalse
-          }
-          final parsedAmount = int.tryParse(amountStr?.replaceFirst('+', '') ?? ''); 
-          final parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
-          final parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
+          final parsedAmount = int.tryParse(amountStr ?? '');
+          final parsedSpent = int.parse(spent) + (parsedAmount as int);
           if (parsedAmount != null) {
             setState(() {
               // 新しい金額と日付のペアをリストの先頭に追加
@@ -145,13 +140,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
               }
               amountsWithDates
-                  .insert(0, {'amount': amountStr, 'date': recognizedDate});
-              if (plus){
-                spent = parsedSpent_minus.toString();
-              }
-              else{
-                spent = parsedSpent_plus.toString();
-              }
+                  .insert(0, {'amount': parsedAmount, 'date': recognizedDate});
+              spent = parsedSpent.toString();
             });
             await _saveSettings(); // 認識した金額と日付のリストを保存
             print('抽出された金額: $parsedAmount');
@@ -169,10 +159,16 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  //期間が過ぎたか判定
   void _checkAndResetSpent() {
-    //期間が過ぎたか判定（なくていいかも）
     DateTime now = DateTime.now();
-    if (now.isAfter(end)) {
+    DateTime endDateOnly =
+        DateTime(end.year, end.month, end.day).add(Duration(days: 1));
+    setState(() {
+      flag = now.isAfter(endDateOnly);
+    });
+    print(flag);
+    if (flag) {
       setState(() {
         spent = '0';
         _saveSettings();
@@ -191,7 +187,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _startDate = prefs.getString('startDate') ?? '1';
       _budget = prefs.getString('budget') ?? '0';
       spent = prefs.getString('spent') ?? '0';
-      balance = prefs.getString('balance') ?? '0';
+      // balance = prefs.getString('balance') ?? '0';
       start = DateTime.parse(
           prefs.getString('start') ?? DateTime.now().toIso8601String());
       end = DateTime.parse(prefs.getString('end') ??
