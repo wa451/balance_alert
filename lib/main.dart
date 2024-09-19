@@ -45,20 +45,27 @@ class _MyHomePageState extends State<MyHomePage> {
   String balance = '10000'; //残高
   DateFormat dateFormat = DateFormat('M月d日');
   DateTime start = DateTime.now(); //期間開始日時
-  DateTime end = DateTime.now().add(Duration(days: 7));//期間終了日時
+  DateTime end = DateTime.now().add(Duration(days: 7)); //期間終了日時
   late StreamSubscription _intentDataStreamSubscription;
   List<SharedFile>? list;
   List<Map<String, dynamic>> amountsWithDates = []; // 金額と日付のペアを保存するリスト
-  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.japanese);
-  
+  final TextRecognizer _textRecognizer =
+      TextRecognizer(script: TextRecognitionScript.japanese);
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-    _loadAmountsWithDates(); // アプリ起動時に保存された金額と日付のリストを読み込む
+    _loadAmountsAndCalculateSpent();
+  }
+
+  @override
+  //ロードし終わってからspentを計算する
+  Future<void> _loadAmountsAndCalculateSpent() async {
+    await _loadSettings();
+    await _loadAmountsWithDates(); // アプリ起動時に保存された金額と日付のリストを読み込む
     _checkAndResetSpent();
     getPeriodText();
+    // _calculateTotalSpent(); // 読み込み完了後にspentを計算
     // アプリがメモリ内にあるときにアプリ外から来た画像を共有する場合
     _intentDataStreamSubscription = FlutterSharingIntent.instance
         .getMediaStream()
@@ -82,10 +89,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  @override
   void dispose() {
     _intentDataStreamSubscription.cancel();
-     _textRecognizer.close();
+    _textRecognizer.close();
     super.dispose();
   }
 
@@ -95,21 +101,25 @@ class _MyHomePageState extends State<MyHomePage> {
     final filePath = list!.first.value; // 画像ファイルのパスを取得
 
     if (filePath != null) {
-      final inputImage = InputImage.fromFilePath(filePath); // 画像をInputImage形式に変換
+      final inputImage =
+          InputImage.fromFilePath(filePath); // 画像をInputImage形式に変換
 
       try {
-        final recognizedText = await _textRecognizer.processImage(inputImage); // テキスト認識を実行
+        final recognizedText =
+            await _textRecognizer.processImage(inputImage); // テキスト認識を実行
         final fullText = recognizedText.text; // 認識された全テキスト
-        
+
         print('認識されたテキスト: $fullText'); // デバッグ用に全テキストを出力
 
         // 正規表現で日付部分を抽出
         final RegExp dateRegExp = RegExp(r'(\d{4}年\d{1,2}月\d{1,2}日)');
         final matchDate = dateRegExp.firstMatch(fullText);
-        String recognizedDate = matchDate != null ? matchDate.group(0)! : "日付不明"; // 日付が見つからない場合、デフォルト値を使用
+        String recognizedDate = matchDate != null
+            ? matchDate.group(0)!
+            : "日付不明"; // 日付が見つからない場合、デフォルト値を使用
         if (matchDate != null) {
           print('抽出された日付: $recognizedDate');
-        }else{
+        } else {
           print('日付が見つかりませんでした。');
         }
 
@@ -118,17 +128,21 @@ class _MyHomePageState extends State<MyHomePage> {
         final matchAmount = amountRegExp.firstMatch(fullText);
         if (matchAmount != null) {
           // 金額をString型からint型に変換
-          final amountStr = matchAmount.group(1)?.replaceAll(',', ''); // カンマを除去して数値部分を取得
+          final amountStr =
+              matchAmount.group(1)?.replaceAll(',', ''); // カンマを除去して数値部分を取得
           final parsedAmount = int.tryParse(amountStr ?? '');
+          final parsedSpent = int.parse(spent) + (parsedAmount as int);
           if (parsedAmount != null) {
             setState(() {
               // 新しい金額と日付のペアをリストの先頭に追加
               if (amountsWithDates.length >= 20) {
                 amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
               }
-              amountsWithDates.insert(0, {'amount': parsedAmount, 'date': recognizedDate});
+              amountsWithDates
+                  .insert(0, {'amount': parsedAmount, 'date': recognizedDate});
+              spent = parsedSpent.toString();
             });
-            await _saveAmountsWithDates(); // 認識した金額と日付のリストを保存
+            await _saveSettings(); // 認識した金額と日付のリストを保存
             print('抽出された金額: $parsedAmount');
           } else {
             print('金額の変換に失敗しました。');
@@ -136,7 +150,6 @@ class _MyHomePageState extends State<MyHomePage> {
         } else {
           print('金額が見つかりませんでした。');
         }
-
       } catch (e) {
         print('テキスト認識エラー: $e');
       }
@@ -145,7 +158,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _checkAndResetSpent() { //期間が過ぎたか判定
+  void _checkAndResetSpent() {
+    //期間が過ぎたか判定（なくていいかも）
     DateTime now = DateTime.now();
     if (now.isAfter(end)) {
       setState(() {
@@ -157,7 +171,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _loadSettings() async { //データベースから取り出す
+  Future<void> _loadSettings() async {
+    //データベースから取り出す
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _selectedPeriod = prefs.getString('selectedPeriod') ?? '一週間';
@@ -166,28 +181,33 @@ class _MyHomePageState extends State<MyHomePage> {
       _budget = prefs.getString('budget') ?? '0';
       spent = prefs.getString('spent') ?? '0';
       balance = prefs.getString('balance') ?? '0';
+      start = DateTime.parse(
+          prefs.getString('start') ?? DateTime.now().toIso8601String());
       end = DateTime.parse(prefs.getString('end') ??
           DateTime.now().add(Duration(days: 7)).toIso8601String());
     });
   }
 
-  Future<void> _saveSettings() async { //データベース保存
+  Future<void> _saveSettings() async {
+    //データベース保存
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedPeriod', _selectedPeriod);
     await prefs.setString('startDay', _startDay);
     await prefs.setString('startDate', _startDate);
     await prefs.setString('budget', _budget);
     await prefs.setString('spent', spent);
-    await prefs.setString('balance', balance);
+    // await prefs.setString('balance', balance);
+    await prefs.setString('start', start.toIso8601String());
     await prefs.setString('end', end.toIso8601String());
-  }
-
-  // 金額と日付のリストを保存するメソッド
-  Future<void> _saveAmountsWithDates() async {
-    final prefs = await SharedPreferences.getInstance();
     String jsonString = jsonEncode(amountsWithDates);
     await prefs.setString('saved_amounts_with_dates', jsonString);
   }
+
+  // 金額と日付のリストを保存するメソッド
+  // Future<void> _saveAmountsWithDates() async {
+  //   final prefs = await SharedPreferences.getInstance();
+
+  // }
 
   // 保存された金額と日付のリストを読み込むメソッド
   Future<void> _loadAmountsWithDates() async {
@@ -196,12 +216,46 @@ class _MyHomePageState extends State<MyHomePage> {
     if (jsonString != null) {
       List<dynamic> jsonList = jsonDecode(jsonString);
       setState(() {
-        amountsWithDates = jsonList.map((e) => e as Map<String, dynamic>).toList();
+        amountsWithDates =
+            jsonList.map((e) => e as Map<String, dynamic>).toList();
       });
     }
   }
 
-  Future<void> _clearAllValues() async { //データベース初期化
+  // amountWithDatesの金額部分を全て足した値を計算しspentにいれる
+  // void _calculateTotalSpent() {
+  //   if (amountsWithDates.isNotEmpty) {
+  //     int totalSpent = 0;
+
+  //     for (var entry in amountsWithDates) {
+  //       final datePattern = RegExp(r'(\d{4})年(\d{1,2})月(\d{1,2})日');
+  //       final match = datePattern.firstMatch(entry['date']);
+
+  //       if (match != null) {
+  //         int year = int.parse(match.group(1)!);
+  //         int month = int.parse(match.group(2)!);
+  //         int day = int.parse(match.group(3)!);
+
+  //         // 抽出した値を使って DateTime を作成する
+  //         DateTime entryDate = DateTime(year, month, day);
+
+  //         // start以上、end以下の範囲の日付だけを計算
+  //         if (entryDate.isAfter(start.subtract(const Duration(days: 1))) &&
+  //             entryDate.isBefore(end.add(const Duration(days: 1)))) {
+  //           totalSpent += entry['amount'] as int;
+  //         }
+  //       }
+
+  //       // 計算結果をsetStateでUIに反映
+  //       setState(() {
+  //         spent = totalSpent.toString();
+  //       });
+  //     }
+  //   }
+  // }
+
+  Future<void> _clearAllValues() async {
+    //データベース初期化
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
@@ -211,19 +265,22 @@ class _MyHomePageState extends State<MyHomePage> {
     await prefs.remove(key);
   }
 
-  double getProgress() { //円グラフ進捗計算
+  double getProgress() {
+    //円グラフ進捗計算
     int i_budget = int.tryParse(_budget) ?? 1;
     int i_spent = int.tryParse(spent) ?? 0;
     return i_budget != 0 ? i_spent / i_budget : 0;
   }
 
-  String getSub() { //予算との差額計算
+  String getSub() {
+    //予算との差額計算
     int i_budget = int.tryParse(_budget) ?? 0;
     int i_spent = int.tryParse(spent) ?? 0;
     return '${i_budget - i_spent}円';
   }
 
-  String getPeriodText() { //期間計算
+  String getPeriodText() {
+    //期間計算
     DateTime now = DateTime.now();
 
     if (_selectedPeriod == '一ヶ月') {
@@ -240,8 +297,10 @@ class _MyHomePageState extends State<MyHomePage> {
       if (endDateTime.isBefore(startDateTime)) {
         endDateTime = DateTime(now.year, now.month + 1, startDate - 1);
       }
-      start = startDateTime;
-      end = endDateTime;
+      setState(() {
+        start = startDateTime;
+        end = endDateTime;
+      });
     } else if (_selectedPeriod == '一週間') {
       int startDayIndex =
           ['月', '火', '水', '木', '金', '土', '日'].indexOf(_startDay);
@@ -253,8 +312,10 @@ class _MyHomePageState extends State<MyHomePage> {
         startOfWeek = startOfWeek.subtract(Duration(days: 7));
         endOfWeek = startOfWeek.add(Duration(days: 6));
       }
-      start = startOfWeek;
-      end = endOfWeek;
+      setState(() {
+        start = startOfWeek;
+        end = endOfWeek;
+      });
     }
     return '${dateFormat.format(start)}~${dateFormat.format(end)}';
   }
@@ -285,9 +346,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-        
+
               SizedBox(height: 20),
-              
+
               Container(
                 child: Container(
                   decoration: BoxDecoration(
@@ -298,17 +359,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        '残高',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      Text(
-                        '$balance円',
-                        style: TextStyle(
-                          fontSize: 36.0,
-                        ),
-                      ),
-                      SizedBox(height: 20),
+                      // const Text(
+                      //   '残高',
+                      //   style: TextStyle(fontSize: 18.0),
+                      // ),
+                      // Text(
+                      //   '${balance}円',
+                      //   style: TextStyle(
+                      //     fontSize: 36.0,
+                      //   ),
+                      // ),
+                      // SizedBox(height: 20),
                       const Text(
                         '予算',
                         style: TextStyle(fontSize: 18.0),
@@ -364,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               SizedBox(height: 20),
-        
+
               ElevatedButton(
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
@@ -400,14 +461,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ImageDisplayPage(
-                        list: list,
-                        money_day_list: amountsWithDates)),
-                    );
-                    },
-                    child: Text('決済履歴確認'),
-                    ),
-        
+                        builder: (context) => ImageDisplayPage(
+                            list: list, money_day_list: amountsWithDates)),
+                  );
+                },
+                child: Text('決済履歴確認'),
+              ),
+
               // ElevatedButton(
               //   onPressed: () async {
               //     await _clearAllValues();
@@ -425,4 +485,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
