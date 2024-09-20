@@ -113,10 +113,12 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red), // 削除アイコン
+                                  icon: Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
-                                    // アイコンを押したときに画像プレビューを表示
-                                            _showImagePreview(context, imagePath);
+                                    setState(() {
+                                      widget.money_day_list.removeAt(index);
+                                    });
+                                    widget.adjustSpent(amount);
                                   },
                                 ),
                               ],

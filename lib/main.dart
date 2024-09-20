@@ -221,12 +221,6 @@ class _MyHomePageState extends State<MyHomePage> {
     await prefs.setString('saved_amounts_with_dates', jsonString);
   }
 
-  // 金額と日付のリストを保存するメソッド
-  // Future<void> _saveAmountsWithDates() async {
-  //   final prefs = await SharedPreferences.getInstance();
-
-  // }
-
   // 保存された金額と日付のリストを読み込むメソッド
   Future<void> _loadAmountsWithDates() async {
     final prefs = await SharedPreferences.getInstance();
@@ -239,38 +233,6 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
-
-  // amountWithDatesの金額部分を全て足した値を計算しspentにいれる
-  // void _calculateTotalSpent() {
-  //   if (amountsWithDates.isNotEmpty) {
-  //     int totalSpent = 0;
-
-  //     for (var entry in amountsWithDates) {
-  //       final datePattern = RegExp(r'(\d{4})年(\d{1,2})月(\d{1,2})日');
-  //       final match = datePattern.firstMatch(entry['date']);
-
-  //       if (match != null) {
-  //         int year = int.parse(match.group(1)!);
-  //         int month = int.parse(match.group(2)!);
-  //         int day = int.parse(match.group(3)!);
-
-  //         // 抽出した値を使って DateTime を作成する
-  //         DateTime entryDate = DateTime(year, month, day);
-
-  //         // start以上、end以下の範囲の日付だけを計算
-  //         if (entryDate.isAfter(start.subtract(const Duration(days: 1))) &&
-  //             entryDate.isBefore(end.add(const Duration(days: 1)))) {
-  //           totalSpent += entry['amount'] as int;
-  //         }
-  //       }
-
-  //       // 計算結果をsetStateでUIに反映
-  //       setState(() {
-  //         spent = totalSpent.toString();
-  //       });
-  //     }
-  //   }
-  // }
 
   Future<void> _clearAllValues() async {
     //データベース初期化
@@ -505,17 +467,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Text('決済履歴確認'),
               ),
-
-              // ElevatedButton(
-              //   onPressed: () async {
-              //     await _clearAllValues();
-              //     // Optionally, you can navigate back or show a confirmation message
-              //   },
-              //   child: Text('すべての設定を削除'),
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: Color(0xffF29083),
-              //   ),
-              // ),
             ],
           ),
         ),
