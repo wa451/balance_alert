@@ -42,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String _startDate = '1'; //何日始まり
   String _budget = "0"; //予算
   String spent = '5000'; //使った額
+  double progress = 0;
   // String balance = '10000'; //残高
   DateFormat dateFormat = DateFormat('M月d日');
   DateTime start = DateTime.now(); //期間開始日時
@@ -56,12 +57,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _loadAmountsAndCalculateSpent();
+    _awaitFunc();
   }
 
   @override
   //ロードし終わってからspentを計算する
-  Future<void> _loadAmountsAndCalculateSpent() async {
+  Future<void> _awaitFunc() async {
     await _loadSettings();
     await _loadAmountsWithDates(); // アプリ起動時に保存された金額と日付のリストを読み込む
     _checkAndResetSpent();
@@ -71,9 +72,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _intentDataStreamSubscription = FlutterSharingIntent.instance
         .getMediaStream()
         .listen((List<SharedFile> value) {
-      setState(() {
-        list = value;
-      });
+        setState(() {
+          list = value;
+        });
       _recognizeTextFromImage(); // テキスト認識を呼び出す
     }, onError: (err) {
       print('getIntentDataStream error: $err');
@@ -83,9 +84,9 @@ class _MyHomePageState extends State<MyHomePage> {
     FlutterSharingIntent.instance
         .getInitialSharing()
         .then((List<SharedFile> value) {
-      setState(() {
-        list = value;
-      });
+        setState(() {
+          list = value;
+        });
       _recognizeTextFromImage(); // テキスト認識を呼び出す
     });
   }
@@ -131,12 +132,13 @@ class _MyHomePageState extends State<MyHomePage> {
           // 金額をString型からint型に変換
           final amountStr =
               matchAmount.group(1)?.replaceAll(',', ''); // カンマを除去して数値部分を取得
-          bool plus=true; //+が含まれているか
-          if (amountStr != null && amountStr.startsWith('+')){
+          bool plus = true; //+が含まれているか
+          if (amountStr != null && amountStr.startsWith('+')) {
             print('文字列の先頭に+があります: $amountStr');
-            plus=false;//+が含まれていたらfalse
+            plus = false; //+が含まれていたらfalse
           }
-          final parsedAmount = int.tryParse(amountStr?.replaceFirst('+', '') ?? ''); 
+          final parsedAmount =
+              int.tryParse(amountStr?.replaceFirst('+', '') ?? '');
           final parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
           final parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
           if (parsedAmount != null) {
@@ -145,12 +147,14 @@ class _MyHomePageState extends State<MyHomePage> {
               if (amountsWithDates.length >= 20) {
                 amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
               }
-              amountsWithDates
-                  .insert(0, {'amount': amountStr, 'date': recognizedDate,'imagePath': filePath});
-              if (plus){
+              amountsWithDates.insert(0, {
+                'amount': amountStr,
+                'date': recognizedDate,
+                'imagePath': filePath
+              });
+              if (plus) {
                 spent = parsedSpent_minus.toString();
-              }
-              else{
+              } else {
                 spent = parsedSpent_plus.toString();
               }
             });
@@ -249,7 +253,16 @@ class _MyHomePageState extends State<MyHomePage> {
     //円グラフ進捗計算
     int i_budget = int.tryParse(_budget) ?? 1;
     int i_spent = int.tryParse(spent) ?? 0;
-    return i_budget != 0 ? i_spent / i_budget : 0;
+    if (i_budget != 0) {
+      setState(() {
+        progress = i_spent / i_budget;
+      });
+    } else {
+      setState(() {
+        progress = 0;
+      });
+    }
+    return progress;
   }
 
   String getSub() {
@@ -343,9 +356,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-
               SizedBox(height: 20),
-
               Container(
                 child: Container(
                   decoration: BoxDecoration(
@@ -422,7 +433,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               SizedBox(height: 20),
-
               ElevatedButton(
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
