@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner:false,
       title: 'BalanceAlert',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -333,8 +334,9 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:Color(0xffFFF8E1), //背景色
       appBar: AppBar(
-        backgroundColor: Color(0xffC6D8F7),
+        backgroundColor: Color(0xffFFC107), //appBar背景色
         title: Text(widget.title),
       ),
       body: SingleChildScrollView(
@@ -344,95 +346,143 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                padding: EdgeInsets.all(16.0),
+                width: 130,
+                height: 50,
                 decoration: BoxDecoration(
-                  color: Color(0xffFAE6E1),
-                  borderRadius: BorderRadius.circular(30.0),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Color(0xffFFE082), //枠線の色
+                      width: 1, //枠線の太さ
+                    ),
+                  ),
                 ),
-                child: Center(
+                child: Text(
+                  '家計簿',
+                  style: TextStyle(fontSize: 36),
+                ),
+              ),
+              SizedBox(height: 40),
+              Container(
                   child: Text(
                     '期間 ${getPeriodText()}',
                     style: TextStyle(fontSize: 18.0),
                   ),
-                ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
+
               Container(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.pink[50],
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20.0),
                   ),
-                  padding: EdgeInsets.all(20.0),
-                  child: Column(
+                  padding: EdgeInsets.all(40.0),
+                  child:  Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // const Text(
-                      //   '残高',
-                      //   style: TextStyle(fontSize: 18.0),
-                      // ),
-                      // Text(
-                      //   '${balance}円',
-                      //   style: TextStyle(
-                      //     fontSize: 36.0,
-                      //   ),
-                      // ),
-                      // SizedBox(height: 20),
-                      const Text(
-                        '予算',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      Text(
-                        '$_budget円',
-                        style: TextStyle(
-                          fontSize: 36.0,
-                          color: Color(0xffA5D9BC),
+                      SizedBox(
+                        width: 180.0,
+                        height: 180.0,
+                        child: CircularProgressIndicator(
+                          value: getProgress(),
+                          backgroundColor: Color(0xffFFF8E1), // 背景色を画像に合わせて調整
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xffFFD900)),
+                          strokeWidth: 40,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      const Text(
-                        '使った額',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      Text(
-                        '$spent円',
-                        style: TextStyle(
-                          fontSize: 36.0,
-                          color: Color(0xffF29083),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      Text(
-                        '予算との差額',
-                        style: TextStyle(fontSize: 18.0),
-                      ),
-                      SizedBox(height: 20),
-                      Stack(
-                        alignment: Alignment.center,
+                      const SizedBox(height: 40), // 円グラフと凡例の間にスペースを追加
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            width: 150.0,
-                            height: 150.0,
-                            child: CircularProgressIndicator(
-                              value: getProgress(),
-                              backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xffF29083)),
-                              strokeWidth: 30,
-                            ),
+                          Container(
+                            width: 16.0,
+                            height: 16.0,
+                            color: Color(0xffFFD900), // 使った額の色
                           ),
-                          Text(
-                            getSub(),
-                            style: TextStyle(fontSize: 17.0),
+                          const SizedBox(width: 4.0),
+                          const Text('支出'),
+                          const SizedBox(width: 20),
+                          Container(
+                            width: 16.0,
+                            height: 16.0,
+                            color: Color(0xffFFF8E1), // 残りの色
                           ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                    ],
+                          const SizedBox(width: 4.0),
+                          const Text('残額'),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              SizedBox(height: 50),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Color(0xffFFE082), //枠線の色
+                      width: 1, //枠線の太さ
+                    ),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround, // 要素間のスペースを均等にする
+                  children: [
+                    Column(
+                      children: [
+                        const Text(
+                          '予算',
+                          style: TextStyle(fontSize: 12.0,
+                          color: Color(0xff795548)),
+                        ),
+                        Text(
+                          '$_budget円',
+                          style: TextStyle(
+                            fontSize: 24.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          '支出',
+                          style: TextStyle(fontSize: 12.0,
+                          color: Color(0xff795548)),
+                        ),
+                        Text(
+                          '$spent円',
+                          style: TextStyle(
+                            fontSize: 24.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text(
+                          '残額',
+                          style: TextStyle(fontSize: 12.0,
+                          color: Color(0xff795548)),
+                        ),
+                        // 差額の表示のために適切な値を入れる
+                        Text(
+                          '${getSub()}', // 必要に応じて変数を設定してください
+                          style: TextStyle(
+                            fontSize: 24.0,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 50),
+
               ElevatedButton(
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
@@ -460,7 +510,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: TextStyle(color: Colors.black),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xffC6D8F7),
+                  backgroundColor: Color(0xffFFC107),
                 ),
               ),
               ElevatedButton(
@@ -475,7 +525,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                   await _saveSettings();
                 },
-                child: Text('決済履歴確認'),
+                child: Text('決済履歴',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xffFFC107),
+                ),
               ),
             ],
           ),
