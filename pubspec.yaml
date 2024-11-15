@@ -18,6 +18,13 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
+flutter_icons:
+  android: true
+  # ios: true
+  image_path: "assets/images/icon.png"
+  adaptive_icon_background: "assets/images/background.png"
+  adaptive_icon_foreground: "assets/images/BalanceAlert_icon.png"
+
 environment:
   sdk: ^3.5.0
 
@@ -38,6 +45,7 @@ dependencies:
   shared_preferences: ^2.0.15
   flutter_sharing_intent: ^1.1.1
   google_mlkit_text_recognition: ^0.13.0
+  flutter_launcher_icons: ^0.14.1
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +68,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/images/BalanceAlert_icon.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

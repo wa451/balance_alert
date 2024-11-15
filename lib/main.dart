@@ -346,23 +346,6 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                width: 130,
-                height: 50,
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Color(0xffFFE082), //枠線の色
-                      width: 1, //枠線の太さ
-                    ),
-                  ),
-                ),
-                child: Text(
-                  '家計簿',
-                  style: TextStyle(fontSize: 36),
-                ),
-              ),
-              SizedBox(height: 40),
-              Container(
                   child: Text(
                     '期間 ${getPeriodText()}',
                     style: TextStyle(fontSize: 18.0),
@@ -483,7 +466,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               SizedBox(height: 50),
 
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
                     MaterialPageRoute(
@@ -505,7 +488,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     await _saveSettings();
                   }
                 },
-                child: Text(
+                icon: Icon(Icons.settings, color: Colors.black), // アイコンを設定
+                label: Text(
                   '設定',
                   style: TextStyle(color: Colors.black),
                 ),
@@ -513,7 +497,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   backgroundColor: Color(0xffFFC107),
                 ),
               ),
-              ElevatedButton(
+              ElevatedButton.icon(
                 onPressed: () async {
                   await Navigator.push(
                     context,
@@ -525,7 +509,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                   await _saveSettings();
                 },
-                child: Text('決済履歴',
+                icon: Icon(Icons.history, color: Colors.black), // 適切なアイコンを設定
+                label: Text(
+                  '決済履歴',
                   style: TextStyle(color: Colors.black),
                 ),
                 style: ElevatedButton.styleFrom(
