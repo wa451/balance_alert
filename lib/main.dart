@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner:false,
+      debugShowCheckedModeBanner: false,
       title: 'BalanceAlert',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -73,9 +73,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _intentDataStreamSubscription = FlutterSharingIntent.instance
         .getMediaStream()
         .listen((List<SharedFile> value) {
-        setState(() {
-          list = value;
-        });
+      setState(() {
+        list = value;
+      });
       _recognizeTextFromImage(); // テキスト認識を呼び出す
     }, onError: (err) {
       print('getIntentDataStream error: $err');
@@ -85,9 +85,9 @@ class _MyHomePageState extends State<MyHomePage> {
     FlutterSharingIntent.instance
         .getInitialSharing()
         .then((List<SharedFile> value) {
-        setState(() {
-          list = value;
-        });
+      setState(() {
+        list = value;
+      });
       _recognizeTextFromImage(); // テキスト認識を呼び出す
     });
   }
@@ -334,7 +334,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Color(0xffFFF8E1), //背景色
+      backgroundColor: Color(0xffFFF8E1), //背景色
       appBar: AppBar(
         backgroundColor: Color(0xffFFC107), //appBar背景色
         title: Text(widget.title),
@@ -346,13 +346,12 @@ class _MyHomePageState extends State<MyHomePage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                  child: Text(
-                    '期間 ${getPeriodText()}',
-                    style: TextStyle(fontSize: 18.0),
-                  ),
+                child: Text(
+                  '期間 ${getPeriodText()}',
+                  style: TextStyle(fontSize: 18.0),
+                ),
               ),
               SizedBox(height: 10),
-
               Container(
                 child: Container(
                   decoration: BoxDecoration(
@@ -360,7 +359,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     borderRadius: BorderRadius.circular(20.0),
                   ),
                   padding: EdgeInsets.all(40.0),
-                  child:  Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
@@ -369,7 +368,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         child: CircularProgressIndicator(
                           value: getProgress(),
                           backgroundColor: Color(0xffFFF8E1), // 背景色を画像に合わせて調整
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xffFFD900)),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Color(0xffFFD900)),
                           strokeWidth: 40,
                         ),
                       ),
@@ -393,12 +393,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           const SizedBox(width: 4.0),
                           const Text('残額'),
-                          ],
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+              ),
               SizedBox(height: 50),
               Container(
                 decoration: BoxDecoration(
@@ -410,14 +410,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround, // 要素間のスペースを均等にする
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceAround, // 要素間のスペースを均等にする
                   children: [
                     Column(
                       children: [
                         const Text(
                           '予算',
-                          style: TextStyle(fontSize: 12.0,
-                          color: Color(0xff795548)),
+                          style: TextStyle(
+                              fontSize: 12.0, color: Color(0xff795548)),
                         ),
                         Text(
                           '$_budget円',
@@ -432,8 +433,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         const Text(
                           '支出',
-                          style: TextStyle(fontSize: 12.0,
-                          color: Color(0xff795548)),
+                          style: TextStyle(
+                              fontSize: 12.0, color: Color(0xff795548)),
                         ),
                         Text(
                           '$spent円',
@@ -448,8 +449,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         const Text(
                           '残額',
-                          style: TextStyle(fontSize: 12.0,
-                          color: Color(0xff795548)),
+                          style: TextStyle(
+                              fontSize: 12.0, color: Color(0xff795548)),
                         ),
                         // 差額の表示のために適切な値を入れる
                         Text(
@@ -465,7 +466,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               SizedBox(height: 50),
-
               ElevatedButton.icon(
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
@@ -495,6 +495,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xffFFC107),
+                  elevation: 10, // 影の強さ
+                  shadowColor: Colors.grey, // 影の色
                 ),
               ),
               ElevatedButton.icon(
@@ -516,8 +518,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xffFFC107),
+                  elevation: 10, // 影の強さ
+                  shadowColor: Colors.grey, // 影の色
                 ),
               ),
+              // ElevatedButton.icon(
+              //   onPressed:,
+              //   icon: Icon(Icons.history, color: Colors.black), // 適切なアイコンを設定
+              //   label: Text(
+              //     '接続',
+              //     style: TextStyle(color: Colors.black),
+              //   ),
+              //   style: ElevatedButton.styleFrom(
+              //     backgroundColor: Color(0xffFFC107),
+              //     elevation: 10, // 影の強さ
+              //     shadowColor: Colors.grey, // 影の色
+              //   ),
+              // ),
             ],
           ),
         ),

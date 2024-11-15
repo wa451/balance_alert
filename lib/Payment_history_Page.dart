@@ -95,7 +95,9 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                 Navigator.of(context).pop(); // ダイアログを閉じる
               },
               child: Text('削除'),
-              style: TextButton.styleFrom(foregroundColor: Colors.red,),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -106,7 +108,9 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                 Navigator.of(context).pop(); // ダイアログを閉じる
               },
               child: Text('保存'),
-              style: TextButton.styleFrom(foregroundColor: Colors.blue,),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.blue,
+              ),
             ),
           ],
         );
@@ -117,10 +121,17 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Color(0xffFFF8E1), //背景色
+      backgroundColor: Color(0xffFFF8E1), //背景色
       appBar: AppBar(
         backgroundColor: Color(0xffFFC107), //appBar背景色
-        title: const Text('決済履歴'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min, // 必要以上に広がらないように設定
+          children: [
+            Icon(Icons.history, color: Colors.black), // アイコンの色を白に
+            SizedBox(width: 8), // テキストとアイコンの間隔
+            Text('決済履歴')
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -138,7 +149,8 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                         final amount =
                             widget.money_day_list[index]['amount'].toString();
                         final date = widget.money_day_list[index]['date'];
-                        final imagePath = widget.money_day_list[index]['imagePath']; // 画像のパスを取得
+                        final imagePath = widget.money_day_list[index]
+                            ['imagePath']; // 画像のパスを取得
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           elevation: 3, // カードの影の強さ（立体感）を設定
@@ -156,23 +168,25 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                               style: TextStyle(fontSize: 16),
                             ),
                             trailing: Row(
-                              mainAxisSize: MainAxisSize.min, // Rowが必要以上に広がらないように
+                              mainAxisSize:
+                                  MainAxisSize.min, // Rowが必要以上に広がらないように
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.photo, color: Colors.blue), // 写真アイコン
+                                  icon: const Icon(Icons.photo,
+                                      color: Colors.blue), // 写真アイコン
                                   onPressed: () {
                                     // アイコンを押したときに画像プレビューを表示
                                     _showImagePreview(context, imagePath);
                                   },
                                 ),
                                 IconButton(
-                                icon: const Icon(Icons.edit,
-                                    color: Colors.green), // 編集アイコン
-                                onPressed: () {
-                                  // 編集ダイアログを表示
-                                  _showEditDialog(context, index);
-                                },
-                              ),
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.green), // 編集アイコン
+                                  onPressed: () {
+                                    // 編集ダイアログを表示
+                                    _showEditDialog(context, index);
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -180,10 +194,15 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                       },
                     )
                   : const Center(
-                      child: Text(
-                        '',
-                        style: TextStyle(
-                            fontSize: 18, fontStyle: FontStyle.italic),
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0), // 見た目の調整用のパディング
+                        child: Text(
+                          '決済なし',
+                          style: TextStyle(
+                            fontSize: 26,
+                            color: Colors.grey, // 文字色をグレーに設定
+                          ),
+                        ),
                       ),
                     ),
             ],
