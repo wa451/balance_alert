@@ -46,7 +46,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   @override
-  void _submitSettings() { //変数渡し
+  void _submitSettings() {
+    //変数渡し
     Navigator.pop(context, {
       'period': _selectedPeriod,
       'startDay': _startDay,
@@ -57,10 +58,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:Color(0xffFFF8E1),
+      backgroundColor: Color(0xffFFF8E1),
       appBar: AppBar(
         backgroundColor: Color(0xffFFC107),
-        title: Text('設定'),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min, // 必要以上に広がらないように設定
+          children: [
+            Icon(Icons.settings, color: Colors.black), // アイコンの色を白に
+            SizedBox(width: 8), // テキストとアイコンの間隔
+            Text('設定')
+          ],
+        ),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: _submitSettings, // 戻るボタンを押したときにデータを返す
@@ -70,174 +78,178 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: Container(
           width: MediaQuery.of(context).size.width * 0.8,
           child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                  padding: EdgeInsets.all(40.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '予算',
-                        style: TextStyle(fontSize: 12.0,
-                        color: Color(0xff795548)),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _budgetController,
-                              textAlign: TextAlign.center,
-                              decoration: InputDecoration(
-                                hintText: '予算を入力してください',
-                                enabledBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Color(0xffFFE082)), // 通常時の下線色
-                                ),
-                                focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Color(0xffFFE082)), // フォーカス時の下線色
-                                ),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                padding: EdgeInsets.all(40.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '予算',
+                      style:
+                          TextStyle(fontSize: 12.0, color: Color(0xff795548)),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _budgetController,
+                            textAlign: TextAlign.center,
+                            decoration: InputDecoration(
+                              hintText: '予算を入力してください',
+                              enabledBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color(0xffFFE082)), // 通常時の下線色
                               ),
-                              keyboardType: TextInputType.number,
-                              onChanged: (String value) {
+                              focusedBorder: UnderlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: Color(0xffFFE082)), // フォーカス時の下線色
+                              ),
+                            ),
+                            keyboardType: TextInputType.number,
+                            onChanged: (String value) {
+                              setState(() {
+                                _budget = value;
+                              });
+                            },
+                          ),
+                        ),
+                        Text('円'),
+                      ],
+                    ),
+                    SizedBox(height: 50),
+                    Text(
+                      '期間',
+                      style:
+                          TextStyle(fontSize: 12.0, color: Color(0xff795548)),
+                    ),
+                    Column(
+                      //ラジオボタン
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Radio<String>(
+                              value: '一週間',
+                              groupValue: _selectedPeriod,
+                              onChanged: (value) {
                                 setState(() {
-                                  _budget = value;
+                                  _selectedPeriod = value!;
                                 });
                               },
+                              activeColor: Color(0xffFFE082),
                             ),
-                          ),
-                          Text('円'),
-                        ],
-                      ),
-                      SizedBox(height: 50),
-
-                      Text(
-                        '期間',
-                        style: TextStyle(fontSize: 12.0,
-                        color: Color(0xff795548)),
-                      ),
-
-                      Column(//ラジオボタン
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Radio<String>(
-                                value: '一週間',
-                                groupValue: _selectedPeriod,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedPeriod = value!;
-                                  });
-                                },
-                                activeColor: Color(0xffFFE082),
-                              ),
-                              Text('一週間'),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Radio<String>(
-                                value: '一ヶ月',
-                                groupValue: _selectedPeriod,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedPeriod = value!;
-                                  });
-                                },
-                                activeColor: Color(0xffFFE082),
-                              ),
-                              Text('一ヶ月'),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      if (_selectedPeriod == '一週間')
-                        Container(
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text('毎月'),
-                                  SizedBox(
-                                    width: 8,
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      DropdownButton<String>(
-                                        value: _startDay,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _startDay = value!;
-                                          });
-                                        },
-                                        items: ['月', '火', '水', '木', '金', '土', '日']
-                                            .map((day) => DropdownMenuItem(
-                                                  value: day,
-                                                  child: Text(day),
-                                                ))
-                                            .toList(),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    width: 8,
-                                  ),
-                                  Text('曜日始まり'),
-                                ],
-                              ),
-                            ],
-                          ),
+                            Text('一週間'),
+                          ],
                         ),
-                      if (_selectedPeriod == '一ヶ月')
-                        Container(
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text('毎月'),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _startDateController,
-                                      textAlign: TextAlign.center,
-                                      decoration:
-                                          InputDecoration(hintText: '日付を入力してください',
-                                          enabledBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xffFFE082)), // 通常時の下線色
-                                          ),
-                                          focusedBorder: UnderlineInputBorder(
-                                            borderSide: BorderSide(color: Color(0xffFFE082)), // フォーカス時の下線色
-                                          ),),
-                                      keyboardType: TextInputType.number,
-                                      onChanged: (String value) {
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Radio<String>(
+                              value: '一ヶ月',
+                              groupValue: _selectedPeriod,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedPeriod = value!;
+                                });
+                              },
+                              activeColor: Color(0xffFFE082),
+                            ),
+                            Text('一ヶ月'),
+                          ],
+                        ),
+                      ],
+                    ),
+                    if (_selectedPeriod == '一週間')
+                      Container(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text('毎月'),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    DropdownButton<String>(
+                                      value: _startDay,
+                                      onChanged: (value) {
                                         setState(() {
-                                          _startDate = value;
+                                          _startDay = value!;
                                         });
                                       },
+                                      items: ['月', '火', '水', '木', '金', '土', '日']
+                                          .map((day) => DropdownMenuItem(
+                                                value: day,
+                                                child: Text(day),
+                                              ))
+                                          .toList(),
                                     ),
-                                  ),
-                                  Text('日始まり'),
-                                ],
-                              ),
-                            ],
-                          ),
+                                  ],
+                                ),
+                                SizedBox(
+                                  width: 8,
+                                ),
+                                Text('曜日始まり'),
+                              ],
+                            ),
+                          ],
                         ),
-                    ],
-                  ),
+                      ),
+                    if (_selectedPeriod == '一ヶ月')
+                      Container(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text('毎月'),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _startDateController,
+                                    textAlign: TextAlign.center,
+                                    decoration: InputDecoration(
+                                      hintText: '日付を入力してください',
+                                      enabledBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color:
+                                                Color(0xffFFE082)), // 通常時の下線色
+                                      ),
+                                      focusedBorder: UnderlineInputBorder(
+                                        borderSide: BorderSide(
+                                            color: Color(
+                                                0xffFFE082)), // フォーカス時の下線色
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (String value) {
+                                      setState(() {
+                                        _startDate = value;
+                                      });
+                                    },
+                                  ),
+                                ),
+                                Text('日始まり'),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ),
       ),
     );
