@@ -14,6 +14,8 @@ class ImageDisplayPage extends StatefulWidget {
 }
 
 class _ImageDisplayPageState extends State<ImageDisplayPage> {
+  final TextEditingController _amountController = TextEditingController();
+
   String money_print(amount) {
     if (amount.contains('+')) {
       amount = amount.substring(1);
@@ -64,10 +66,60 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
     );
   }
 
+  void _showEditDialog(BuildContext context, int index) {
+    final originalAmount = widget.money_day_list[index]['amount'].toString();
+    _amountController.text = originalAmount; // 初期値として既存の金額をセット
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('編集または削除'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _amountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: '金額を編集'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.money_day_list.removeAt(index); // 決済を削除
+                });
+                widget.adjustSpent(originalAmount); // 削除された金額をadjustSpentに反映
+                Navigator.of(context).pop(); // ダイアログを閉じる
+              },
+              child: Text('削除'),
+              style: TextButton.styleFrom(foregroundColor: Colors.red,),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  widget.money_day_list[index]['amount'] =
+                      int.parse(_amountController.text); // 金額を更新
+                });
+                Navigator.of(context).pop(); // ダイアログを閉じる
+              },
+              child: Text('保存'),
+              style: TextButton.styleFrom(foregroundColor: Colors.blue,),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:Color(0xffFFF8E1), //背景色
       appBar: AppBar(
+        backgroundColor: Color(0xffFFC107), //appBar背景色
         title: const Text('決済履歴'),
       ),
       body: SingleChildScrollView(
@@ -90,9 +142,10 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                         return Card(
                           margin: EdgeInsets.symmetric(vertical: 8.0),
                           elevation: 3, // カードの影の強さ（立体感）を設定
+                          color: Colors.white,
                           child: ListTile(
-                            leading:
-                                Icon(Icons.attach_money, color: Colors.green),
+                            // leading:
+                            //     Icon(Icons.attach_money, color: Colors.green),
                             title: Text(
                               money_print(amount),
                               style: TextStyle(
@@ -113,14 +166,13 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                                   },
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () {
-                                    setState(() {
-                                      widget.money_day_list.removeAt(index);
-                                    });
-                                    widget.adjustSpent(amount);
-                                  },
-                                ),
+                                icon: const Icon(Icons.edit,
+                                    color: Colors.green), // 編集アイコン
+                                onPressed: () {
+                                  // 編集ダイアログを表示
+                                  _showEditDialog(context, index);
+                                },
+                              ),
                               ],
                             ),
                           ),
@@ -129,7 +181,7 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                     )
                   : const Center(
                       child: Text(
-                        '決済記録なし',
+                        '',
                         style: TextStyle(
                             fontSize: 18, fontStyle: FontStyle.italic),
                       ),
