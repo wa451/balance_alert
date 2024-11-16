@@ -25,6 +25,20 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
     }
   }
 
+  String shop_print(shop, bool? shoporhuman, amount) {
+    if (!amount.contains('+')) {
+      if (shoporhuman ?? true) {
+        //店に支払う場合
+        return '支払い先: $shop';
+      } else {
+        //人にあげる場合
+        return '譲渡先: $shop';
+      }
+    } else {
+      return '送金元: $shop';
+    }
+  }
+
   // 画像プレビューのためのモーダルダイアログ表示
   void _showImagePreview(BuildContext context, String imagePath) {
     showDialog(
@@ -149,6 +163,10 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                         final amount =
                             widget.money_day_list[index]['amount'].toString();
                         final date = widget.money_day_list[index]['date'];
+                        final shop =
+                            widget.money_day_list[index]['shop'].toString();
+                        final shoporhuman =
+                            widget.money_day_list[index]['shoporhuman'];
                         final imagePath = widget.money_day_list[index]
                             ['imagePath']; // 画像のパスを取得
                         return Card(
@@ -163,9 +181,25 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
                             ),
-                            subtitle: Text(
-                              '日付: $date',
-                              style: TextStyle(fontSize: 16),
+                            // subtitle: Text(
+                            //   '日付: $date',
+                            //   style: TextStyle(fontSize: 16),
+                            // ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '日付: $date', // 日付を表示
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(height: 4), // 少し間隔を空ける
+                                Text(
+                                  shop_print(shop, shoporhuman,
+                                      amount), // shop_print を使用
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.blueGrey),
+                                ),
+                              ],
                             ),
                             trailing: Row(
                               mainAxisSize:

@@ -142,6 +142,64 @@ class _MyHomePageState extends State<MyHomePage> {
               int.tryParse(amountStr?.replaceFirst('+', '') ?? '');
           final parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
           final parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
+
+          //決済した場所の取得
+          String shopName = "不明"; //デフォルト
+          bool shoporhuman = true; //デフォルト：
+          if (plus) {
+            for (final block in recognizedText.blocks) {
+              for (final line in block.lines) {
+                if (line.text.contains('に支払い')) {
+                  shopName = line.text.split('に支払い')[0]; // 店名を抽出
+                  break;
+                } else if (line.text.contains('に送金(譲渡)')) {
+                  shopName = line.text.split('に送金(譲渡)')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                } else if (line.text.contains('に支払')) {
+                  shopName = line.text.split('に支払')[0]; // 店名を抽出
+                  break;
+                } else if (line.text.contains('に送金(譲渡)')) {
+                  shopName = line.text.split('に送金(譲渡)')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                } else if (line.text.contains('に支')) {
+                  shopName = line.text.split('に支')[0]; // 店名を抽出
+                  break;
+                } else if (line.text.contains('に送金(譲')) {
+                  shopName = line.text.split('に送金(譲')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                } else if (line.text.contains('に送金')) {
+                  shopName = line.text.split('に送金')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                }
+              }
+            }
+          } else {
+            for (final block in recognizedText.blocks) {
+              for (final line in block.lines) {
+                if (line.text.contains('から受け取り')) {
+                  shopName = line.text.split('から受け取り')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                } else if (line.text.contains('から受け取')) {
+                  shopName = line.text.split('から受け取')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                } else if (line.text.contains('から受け')) {
+                  shopName = line.text.split('から受け')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                } else if (line.text.contains('から受')) {
+                  shopName = line.text.split('から受')[0]; // 人名を抽出
+                  shoporhuman = false;
+                  break;
+                }
+              }
+            }
+          }
           if (parsedAmount != null) {
             setState(() {
               // 新しい金額と日付のペアをリストの先頭に追加
@@ -149,9 +207,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 amountsWithDates.removeLast(); // リストのサイズが20を超えた場合、最も古い項目を削除
               }
               amountsWithDates.insert(0, {
-                'amount': amountStr,
-                'date': recognizedDate,
-                'imagePath': filePath
+                'amount': amountStr ?? '0',
+                'date': recognizedDate ?? '日付不明',
+                'shop': shopName ?? '不明',
+                'shoporhuman': shoporhuman ?? true,
+                'imagePath': filePath ?? '',
               });
               if (plus) {
                 spent = parsedSpent_minus.toString();
@@ -169,9 +229,26 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       } catch (e) {
         print('テキスト認識エラー: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('画像の読み込みに失敗しました。ファイルを確認してください。'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } else {
       print('画像ファイルのパスが無効です。');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('画像ファイルが見つかりません。'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
     }
   }
 
