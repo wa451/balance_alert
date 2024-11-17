@@ -272,6 +272,17 @@ class _MyHomePageState extends State<MyHomePage> {
     int i_spent = int.tryParse(spent) ?? 0;
     return '${i_budget - i_spent}円';
   }
+  Color getColorForProgress(double progress) {
+    if (progress <= 0.5) {
+      return Colors.green;
+    } else if (progress <= 0.75) {
+      return Colors.yellow;
+    } else if (progress < 1.0) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
+  }
 
   String getPeriodText() {
     //期間計算
@@ -367,9 +378,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         height: 180.0,
                         child: CircularProgressIndicator(
                           value: getProgress(),
-                          backgroundColor: Color(0xffFFF8E1), // 背景色を画像に合わせて調整
+                          backgroundColor: Color(0xffFFF8E1),
                           valueColor:
-                              AlwaysStoppedAnimation<Color>(Color(0xffFFD900)),
+                              AlwaysStoppedAnimation<Color>(getColorForProgress(progress)),
                           strokeWidth: 40,
                         ),
                       ),
