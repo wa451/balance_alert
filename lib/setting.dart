@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Radio<String>(
-                              value: '一週間',
+                              value: '週',
                               groupValue: _selectedPeriod,
                               onChanged: (value) {
                                 setState(() {
@@ -145,14 +145,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               },
                               activeColor: Color(0xffFFE082),
                             ),
-                            Text('一週間'),
+                            Text('週'),
                           ],
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Radio<String>(
-                              value: '一ヶ月',
+                              value: '月',
                               groupValue: _selectedPeriod,
                               onChanged: (value) {
                                 setState(() {
@@ -161,12 +161,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               },
                               activeColor: Color(0xffFFE082),
                             ),
-                            Text('一ヶ月'),
+                            Text('月'),
                           ],
                         ),
                       ],
                     ),
-                    if (_selectedPeriod == '一週間')
+                    if (_selectedPeriod == '週')
                       Container(
                         child: Column(
                           children: [
@@ -206,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                         ),
                       ),
-                    if (_selectedPeriod == '一ヶ月')
+                    if (_selectedPeriod == '月')
                       Container(
                         child: Column(
                           children: [

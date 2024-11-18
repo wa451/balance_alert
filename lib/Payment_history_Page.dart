@@ -5,7 +5,7 @@ import 'package:flutter_sharing_intent/model/sharing_file.dart';
 class ImageDisplayPage extends StatefulWidget {
   final List<SharedFile>? list;
   final money_day_list;
-  final Function(String) adjustSpent;
+  final Function(String, String) adjustSpent;
   const ImageDisplayPage(
       {super.key, this.list, this.money_day_list, required this.adjustSpent});
 
@@ -102,10 +102,11 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
           actions: [
             TextButton(
               onPressed: () {
+                String date = widget.money_day_list[index]['date'];
                 setState(() {
                   widget.money_day_list.removeAt(index); // 決済を削除
                 });
-                widget.adjustSpent(originalAmount); // 削除された金額をadjustSpentに反映
+                widget.adjustSpent(originalAmount, date); // 削除された金額をadjustSpentに反映
                 Navigator.of(context).pop(); // ダイアログを閉じる
               },
               child: Text('削除'),

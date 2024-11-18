@@ -38,7 +38,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _selectedPeriod = '一週間'; //期間範囲
+  String _selectedPeriod = '週'; //期間範囲
   String _startDay = '月'; //何曜日始まり
   String _startDate = '1'; //何日始まり
   String _budget = "0"; //予算
@@ -125,6 +125,10 @@ class _MyHomePageState extends State<MyHomePage> {
         } else {
           print('日付が見つかりませんでした。');
         }
+        DateTime? recognizedDateTime;
+        if (matchDate != null) {
+          recognizedDateTime = DateFormat('yyyy年M月d日').parse(recognizedDate);
+        }
 
         // 正規表現で金額部分を抽出
         final RegExp amountRegExp = RegExp(r'(\+?\d{1,3}(,\d{3})*)円');
@@ -140,8 +144,19 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           final parsedAmount =
               int.tryParse(amountStr?.replaceFirst('+', '') ?? '');
-          final parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
-          final parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
+                  // 日付が期間内なら支出計算を実行
+          final parsedSpent_minus;
+          final parsedSpent_plus;
+          if (recognizedDateTime != null &&
+            recognizedDateTime.isAfter(start.subtract(Duration(days: 1))) &&
+            recognizedDateTime.isBefore(end.add(Duration(days: 1)))) {
+              parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
+              parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
+            }
+          else{
+            parsedSpent_minus = int.parse(spent);
+            parsedSpent_plus = int.parse(spent);
+          }
 
           //決済した場所の取得
           String shopName = "不明"; //デフォルト
@@ -264,6 +279,17 @@ class _MyHomePageState extends State<MyHomePage> {
     if (flag) {
       setState(() {
         spent = '0';
+
+      if (_selectedPeriod == '月') {
+        // 1ヶ月の場合
+        start = DateTime(end.year, end.month, end.day + 1);
+        end = DateTime(start.year, start.month + 1, start.day - 1);
+      } else if (_selectedPeriod == '週') {
+        // 1週間の場合
+        start = DateTime(end.year, end.month, end.day + 1);
+        end = start.add(Duration(days: 6));
+      }
+
         _saveSettings();
       });
       getPeriodText();
@@ -275,7 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //データベースから取り出す
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _selectedPeriod = prefs.getString('selectedPeriod') ?? '一週間';
+      _selectedPeriod = prefs.getString('selectedPeriod') ?? '週';
       _startDay = prefs.getString('startDay') ?? '月';
       _startDate = prefs.getString('startDate') ?? '1';
       _budget = prefs.getString('budget') ?? '0';
@@ -350,11 +376,23 @@ class _MyHomePageState extends State<MyHomePage> {
     return '${i_budget - i_spent}円';
   }
 
+  Color getColorForProgress(double progress) {
+    if (progress <= 0.5) {
+      return Colors.green;
+    } else if (progress <= 0.75) {
+      return Colors.yellow;
+    } else if (progress < 1.0) {
+      return Colors.orange;
+    } else {
+      return Colors.red;
+    }
+  }
+
   String getPeriodText() {
     //期間計算
     DateTime now = DateTime.now();
 
-    if (_selectedPeriod == '一ヶ月') {
+    if (_selectedPeriod == '月') {
       int startDate = int.tryParse(_startDate) ?? 1;
       startDate = startDate > 30 ? 30 : startDate;
       DateTime startDateTime = DateTime(now.year, now.month, startDate);
@@ -372,7 +410,7 @@ class _MyHomePageState extends State<MyHomePage> {
         start = startDateTime;
         end = endDateTime;
       });
-    } else if (_selectedPeriod == '一週間') {
+    } else if (_selectedPeriod == '週') {
       int startDayIndex =
           ['月', '火', '水', '木', '金', '土', '日'].indexOf(_startDay);
       DateTime startOfWeek =
@@ -391,21 +429,26 @@ class _MyHomePageState extends State<MyHomePage> {
     return '${dateFormat.format(start)}~${dateFormat.format(end)}';
   }
 
-  void adjustSpent(String amount) {
+  void adjustSpent(String amount, String date) {
     // 金額を整数に変換
     int i_spent = int.parse(spent);
     int amountValue = int.parse(amount.replaceAll('+', ''));
+    DateTime dateTime = DateFormat('yyyy年M月d日').parse(date);
 
-    if (amount.startsWith('+')) {
-      // +がついている場合はspentから引く
-      i_spent += amountValue;
-    } else {
-      // +がついていない場合はspentに足す
-      i_spent -= amountValue;
+    if (dateTime != null &&
+      dateTime.isAfter(start.subtract(Duration(days: 1))) &&
+      dateTime.isBefore(end.add(Duration(days: 1)))) {
+      if (amount.startsWith('+')) {
+        // +がついている場合はspentから引く
+        i_spent += amountValue;
+      } else {
+        // +がついていない場合はspentに足す
+        i_spent -= amountValue;
+      }
+      setState(() {
+        spent = i_spent.toString();
+      });
     }
-    setState(() {
-      spent = i_spent.toString();
-    });
   }
 
   @override
@@ -444,9 +487,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         height: 180.0,
                         child: CircularProgressIndicator(
                           value: getProgress(),
-                          backgroundColor: Color(0xffFFF8E1), // 背景色を画像に合わせて調整
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Color(0xffFFD900)),
+                          backgroundColor: Color(0xffFFF8E1),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              getColorForProgress(progress)),
                           strokeWidth: 40,
                         ),
                       ),
