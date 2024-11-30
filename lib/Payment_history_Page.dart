@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
+import 'package:intl/intl.dart';
 
 class ImageDisplayPage extends StatefulWidget {
   final List<SharedFile>? list;
@@ -134,7 +135,16 @@ class _ImageDisplayPageState extends State<ImageDisplayPage> {
   }
 
   @override
+  // 日付の新しい順に並び替え
   Widget build(BuildContext context) {
+  final dateFormat = DateFormat('yyyy年MM月dd日');
+
+  widget.money_day_list.sort((a, b) {
+    final dateA = dateFormat.parse(a['date']);
+    final dateB = dateFormat.parse(b['date']);
+    return dateB.compareTo(dateA); // 降順ソート
+  });
+
     return Scaffold(
       backgroundColor: Color(0xffFFF8E1), //背景色
       appBar: AppBar(
