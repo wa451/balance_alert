@@ -9,6 +9,12 @@ import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'dart:convert';
 
+import 'dart:ffi';
+
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -144,16 +150,15 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           final parsedAmount =
               int.tryParse(amountStr?.replaceFirst('+', '') ?? '');
-                  // 日付が期間内なら支出計算を実行
+          // 日付が期間内なら支出計算を実行
           final parsedSpent_minus;
           final parsedSpent_plus;
           if (recognizedDateTime != null &&
-            recognizedDateTime.isAfter(start.subtract(Duration(days: 1))) &&
-            recognizedDateTime.isBefore(end.add(Duration(days: 1)))) {
-              parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
-              parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
-            }
-          else{
+              recognizedDateTime.isAfter(start.subtract(Duration(days: 1))) &&
+              recognizedDateTime.isBefore(end.add(Duration(days: 1)))) {
+            parsedSpent_minus = int.parse(spent) + (parsedAmount as int);
+            parsedSpent_plus = int.parse(spent) - (parsedAmount as int);
+          } else {
             parsedSpent_minus = int.parse(spent);
             parsedSpent_plus = int.parse(spent);
           }
@@ -280,15 +285,15 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         spent = '0';
 
-      if (_selectedPeriod == '月') {
-        // 1ヶ月の場合
-        start = DateTime(end.year, end.month, end.day + 1);
-        end = DateTime(start.year, start.month + 1, start.day - 1);
-      } else if (_selectedPeriod == '週') {
-        // 1週間の場合
-        start = DateTime(end.year, end.month, end.day + 1);
-        end = start.add(Duration(days: 6));
-      }
+        if (_selectedPeriod == '月') {
+          // 1ヶ月の場合
+          start = DateTime(end.year, end.month, end.day + 1);
+          end = DateTime(start.year, start.month + 1, start.day - 1);
+        } else if (_selectedPeriod == '週') {
+          // 1週間の場合
+          start = DateTime(end.year, end.month, end.day + 1);
+          end = start.add(Duration(days: 6));
+        }
 
         _saveSettings();
       });
@@ -436,8 +441,8 @@ class _MyHomePageState extends State<MyHomePage> {
     DateTime dateTime = DateFormat('yyyy年M月d日').parse(date);
 
     if (dateTime != null &&
-      dateTime.isAfter(start.subtract(Duration(days: 1))) &&
-      dateTime.isBefore(end.add(Duration(days: 1)))) {
+        dateTime.isAfter(start.subtract(Duration(days: 1))) &&
+        dateTime.isBefore(end.add(Duration(days: 1)))) {
       if (amount.startsWith('+')) {
         // +がついている場合はspentから引く
         i_spent += amountValue;
@@ -448,6 +453,94 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         spent = i_spent.toString();
       });
+    }
+  }
+
+  void _bluetest(int balance_percents) async {
+    List<BluetoothDevice> systemDevices = [];
+    List<ScanResult> scanResults = [];
+    try {
+      if (await FlutterBluePlus.isSupported == false) {
+        debugPrint("Bluetooth not supported by this device");
+        return;
+      }
+      var subscription_blue = FlutterBluePlus.adapterState
+          .listen((BluetoothAdapterState state) async {
+        if (state == BluetoothAdapterState.on) {
+          debugPrint("bluetooth on!");
+        } else {
+          debugPrint("error: bluetooth off");
+        }
+      });
+
+      // Wait for Bluetooth enabled & permission granted
+      // In your real app you should use `FlutterBluePlus.adapterState.listen` to handle all states
+      await FlutterBluePlus.adapterState
+          .where((val) => val == BluetoothAdapterState.on)
+          .first;
+
+      var subscription = FlutterBluePlus.onScanResults.listen(
+        (results) {
+          scanResults = results;
+          results.map((r) => (systemDevices.add(r.device)));
+          if (results.isNotEmpty) {
+            ScanResult r = results.last; // the most recently found device
+            systemDevices.add(r.device);
+            debugPrint(
+                '${r.device.remoteId}: "${r.advertisementData.advName}" found!');
+          }
+        },
+        onError: (e) => print(e),
+      );
+
+      // スキャン開始
+      // Start scanning
+      await FlutterBluePlus.startScan(
+          withKeywords: ["Leafony"],
+          // withRemoteIds: ["A4:CF:99:78:94:CE"],
+          androidUsesFineLocation: true,
+          timeout: Duration(seconds: 5));
+
+      // スキャン停止
+      await FlutterBluePlus.isScanning.where((val) => val == false).first;
+
+      while (FlutterBluePlus.isScanningNow) {}
+      systemDevices.map((d) => debugPrint(d.advName));
+      if (systemDevices.isEmpty) {
+        debugPrint('devices is empty');
+      } else {
+        BluetoothDevice device = systemDevices.last;
+
+        // 切断時のリスナーを設定
+        device.connectionState.listen((BluetoothConnectionState state) async {
+          if (state == BluetoothConnectionState.disconnected) {
+            // デバイスが切断された時の処理
+            debugPrint("error: device disconnected");
+          }
+        });
+
+        // デバイスへの接続
+        await device.connect();
+        List<BluetoothService> services = await device.discoverServices();
+        debugPrint(services.toString());
+        // services.forEach((service) async {
+        //   var charas = service.characteristics;
+        //   for (BluetoothCharacteristic c in charas) {
+        //     if (c.properties.write) {
+        //       await c.write([0x10]);
+        //     }
+        //   }
+        // });
+
+        await services[2].characteristics[1].write([balance_percents]);
+        await device.disconnect();
+      }
+
+      // cancel to prevent duplicate listeners
+      subscription.cancel();
+      subscription_blue.cancel();
+    } catch (e) {
+      debugPrint("接続できませんでした");
     }
   }
 
@@ -642,19 +735,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   shadowColor: Colors.grey, // 影の色
                 ),
               ),
-              // ElevatedButton.icon(
-              //   onPressed:,
-              //   icon: Icon(Icons.history, color: Colors.black), // 適切なアイコンを設定
-              //   label: Text(
-              //     '接続',
-              //     style: TextStyle(color: Colors.black),
-              //   ),
-              //   style: ElevatedButton.styleFrom(
-              //     backgroundColor: Color(0xffFFC107),
-              //     elevation: 10, // 影の強さ
-              //     shadowColor: Colors.grey, // 影の色
-              //   ),
-              // ),
+              ElevatedButton.icon(
+                onPressed: () => _bluetest(100 - (progress * 100).toInt()),
+                icon: Icon(Icons.history, color: Colors.black), // 適切なアイコンを設定
+                label: Text(
+                  '接続',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xffFFC107),
+                  elevation: 10, // 影の強さ
+                  shadowColor: Colors.grey, // 影の色
+                ),
+              ),
             ],
           ),
         ),
