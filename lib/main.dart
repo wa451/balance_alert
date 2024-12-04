@@ -60,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextRecognizer _textRecognizer =
       TextRecognizer(script: TextRecognitionScript.japanese);
   bool flag = false; //now.isAfter(endDateOnly)用
+  String _connectionStatus = "";
 
   @override
   void initState() {
@@ -272,7 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  //期間が過ぎたか判定
+//期間が過ぎたか判定
   void _checkAndResetSpent() {
     DateTime now = DateTime.now();
     DateTime endDateOnly =
@@ -302,8 +303,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+//データベースから取り出す
   Future<void> _loadSettings() async {
-    //データベースから取り出す
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _selectedPeriod = prefs.getString('selectedPeriod') ?? '週';
@@ -319,8 +320,8 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+//データベース保存
   Future<void> _saveSettings() async {
-    //データベース保存
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedPeriod', _selectedPeriod);
     await prefs.setString('startDay', _startDay);
@@ -347,8 +348,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+//データベース初期化(使ってない)
   Future<void> _clearAllValues() async {
-    //データベース初期化
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
@@ -358,8 +359,8 @@ class _MyHomePageState extends State<MyHomePage> {
     await prefs.remove(key);
   }
 
+//円グラフ進捗計算
   double getProgress() {
-    //円グラフ進捗計算
     int i_budget = int.tryParse(_budget) ?? 1;
     int i_spent = int.tryParse(spent) ?? 0;
     if (i_budget != 0) {
@@ -374,13 +375,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return progress;
   }
 
+//予算との差額計算
   String getSub() {
-    //予算との差額計算
     int i_budget = int.tryParse(_budget) ?? 0;
     int i_spent = int.tryParse(spent) ?? 0;
     return '${i_budget - i_spent}円';
   }
 
+// 円グラフの色
   Color getColorForProgress(double progress) {
     if (progress <= 0.5) {
       return Colors.green;
@@ -434,6 +436,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return '${dateFormat.format(start)}~${dateFormat.format(end)}';
   }
 
+//履歴を削除したときにspentに足し引きする
   void adjustSpent(String amount, String date) {
     // 金額を整数に変換
     int i_spent = int.parse(spent);
@@ -444,10 +447,10 @@ class _MyHomePageState extends State<MyHomePage> {
         dateTime.isAfter(start.subtract(Duration(days: 1))) &&
         dateTime.isBefore(end.add(Duration(days: 1)))) {
       if (amount.startsWith('+')) {
-        // +がついている場合はspentから引く
+        // +がついている場合はspentに足す
         i_spent += amountValue;
       } else {
-        // +がついていない場合はspentに足す
+        // +がついていない場合はspentから引く
         i_spent -= amountValue;
       }
       setState(() {
@@ -456,11 +459,52 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+// 設定画面から戻ってきたときにspentを再計算
+  void calculateSpent() {
+    // 期間内の日付に該当するデータをフィルタリング
+    int totalSpent = 0; // 合計金額（spent）
+
+    // リストをフィルタリングして、期間内のデータを取り出し
+    List<Map<String, dynamic>> filteredEntries =
+        amountsWithDates.where((entry) {
+      dynamic date = entry['date'];
+      DateTime dateTime = DateFormat('yyyy年M月d日').parse(date);
+      // 期間内かどうかの判定
+      return dateTime.isAfter(start.subtract(Duration(days: 1))) &&
+          dateTime.isBefore(end.add(Duration(days: 1)));
+    }).toList();
+
+    // フィルタリングしたリストをループして金額を計算
+    for (var entry in filteredEntries) {
+      String amount = entry['amount'];
+      int amountValue = int.parse(amount.replaceAll('+', '')); // +を除去して整数に変換
+
+      if (amount.startsWith('+')) {
+        totalSpent -= amountValue; // +の金額は引く
+      } else {
+        totalSpent += amountValue; // +がついていない金額は足す
+      }
+    }
+
+    // 最終的な合計金額をspentにセット
+    setState(() {
+      spent = totalSpent.toString();
+    });
+    return;
+  }
+
   void _bluetest(int balance_percents) async {
+    setState(() {
+      _connectionStatus = "接続中..."; // 接続中の状態に設定
+    });
+
     List<BluetoothDevice> systemDevices = [];
     List<ScanResult> scanResults = [];
     try {
       if (await FlutterBluePlus.isSupported == false) {
+        setState(() {
+          _connectionStatus = "Bluetoothがサポートされていません";
+        });
         debugPrint("Bluetooth not supported by this device");
         return;
       }
@@ -507,6 +551,9 @@ class _MyHomePageState extends State<MyHomePage> {
       while (FlutterBluePlus.isScanningNow) {}
       systemDevices.map((d) => debugPrint(d.advName));
       if (systemDevices.isEmpty) {
+        setState(() {
+          _connectionStatus = "デバイスが見つかりませんでした";
+        });
         debugPrint('devices is empty');
       } else {
         BluetoothDevice device = systemDevices.last;
@@ -534,6 +581,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
         await services[2].characteristics[1].write([balance_percents]);
         await device.disconnect();
+        setState(() {
+          _connectionStatus = "接続成功";
+        });
       }
 
       // cancel to prevent duplicate listeners
@@ -547,7 +597,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffFFF8E1), //背景色
+      // backgroundColor: getColorForProgress(progress), //背景色
+      backgroundColor: Color(0xffFFF8E1),
       appBar: AppBar(
         backgroundColor: Color(0xffFFC107), //appBar背景色
         title: Text(widget.title),
@@ -612,7 +663,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-              SizedBox(height: 50),
+              SizedBox(height: 20),
               Container(
                 decoration: BoxDecoration(
                   border: Border(
@@ -678,7 +729,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
               ),
-              SizedBox(height: 50),
+              SizedBox(height: 35),
               ElevatedButton.icon(
                 onPressed: () async {
                   final result = await Navigator.of(context).push(
@@ -699,6 +750,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       _budget = result['budget'];
                     });
                     await _saveSettings();
+                    await getPeriodText();
+                    calculateSpent();
                   }
                 },
                 icon: Icon(Icons.settings, color: Colors.black), // アイコンを設定
@@ -747,6 +800,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   elevation: 10, // 影の強さ
                   shadowColor: Colors.grey, // 影の色
                 ),
+              ),
+              Text(
+                _connectionStatus, // 接続状態を表示
+                style: TextStyle(fontSize: 14, color: Colors.blueGrey),
               ),
             ],
           ),
