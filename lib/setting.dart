@@ -112,6 +112,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             ),
                             keyboardType: TextInputType.number,
+                            style: TextStyle(
+                              fontSize: 24.0, // 文字のサイズを指定
+                            ),
                             onChanged: (String value) {
                               setState(() {
                                 _budget = value;
@@ -175,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               children: [
                                 Text('毎月'),
                                 SizedBox(
-                                  width: 8,
+                                  width: 16,
                                 ),
                                 Row(
                                   mainAxisAlignment:
@@ -191,14 +194,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       items: ['月', '火', '水', '木', '金', '土', '日']
                                           .map((day) => DropdownMenuItem(
                                                 value: day,
-                                                child: Text(day),
+                                                child: Text(
+                                                  day,
+                                                  style: TextStyle(fontSize: 20), // フォントサイズを指定
+                                                ),
                                               ))
                                           .toList(),
                                     ),
                                   ],
                                 ),
                                 SizedBox(
-                                  width: 8,
+                                  width: 16,
                                 ),
                                 Text('曜日始まり'),
                               ],
@@ -232,6 +238,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       ),
                                     ),
                                     keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      fontSize: 24.0, // 文字のサイズを指定
+                                    ),
                                     onChanged: (String value) {
                                       setState(() {
                                         _startDate = value;
